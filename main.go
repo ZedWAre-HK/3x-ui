@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 	_ "unsafe"
+	_ "tzdata"
 
 	"x-ui/config"
 	"x-ui/database"
