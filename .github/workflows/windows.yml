@@ -34,10 +34,10 @@ jobs:
       # 构建 Windows 平台的 x-ui
       - name: Build x-ui for Windows (amd64)
         run: |
-          export CGO_ENABLED=0    # 禁用 Cgo 以避免交叉编译时的依赖问题
+          export CGO_ENABLED=1   # 启用 Cgo，以便支持 go-sqlite3
           export GOOS=windows     # 设置目标操作系统为 Windows
           export GOARCH=amd64     # 设置目标架构为 amd64
-          export CC=x86_64-w64-mingw32-gcc # 设置交叉编译的 C 编译器
+          export CC=x86_64-w64-mingw32-gcc # 设置交叉编译器
 
           # 使用 go build 构建 Windows 可执行文件
           go build -o windows_amd64.exe -v main.go
