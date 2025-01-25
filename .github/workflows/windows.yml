@@ -1,0 +1,64 @@
+name: Build 3X-UI for Windows
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        platform: 
+          - amd64
+
+    steps:
+      # 检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 设置 Go 环境
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      # 安装 Windows 编译所需的依赖
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install gcc-mingw-w64-x86-64
+
+      # 构建 Windows 平台的 x-ui
+      - name: Build x-ui for Windows (amd64)
+        run: |
+          export CGO_ENABLED=0    # 禁用 Cgo 以避免交叉编译时的依赖问题
+          export GOOS=windows     # 设置目标操作系统为 Windows
+          export GOARCH=amd64     # 设置目标架构为 amd64
+          export CC=x86_64-w64-mingw32-gcc # 设置交叉编译的 C 编译器
+
+          # 使用 go build 构建 Windows 可执行文件
+          go build -o windows_amd64.exe -v main.go
+
+      # 将构建的文件压缩为 tar 文件
+      - name: Package the build
+        run: tar -zcvf x-ui-windows-amd64.tar.gz windows_amd64.exe
+
+      # 上传构建文件作为 Artifacts
+      - name: Upload Windows build to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: x-ui-windows-amd64
+          path: ./x-ui-windows-amd64.tar.gz
+
+      # 上传构建文件到 GitHub Release
+      - name: Upload Windows build to GitHub Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          file: x-ui-windows-amd64.tar.gz
+          asset_name: x-ui-windows-amd64.tar.gz
+          prerelease: true
